@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+    
+    <head>
+        <title>AACR 2013: Connecting RAS research community</title>
+        
+        <script type="text/javascript" src="/static/js/min/json2.min.js"></script>
+        <script type="text/javascript" src="/static/js/min/AC_OETags.min.js"></script>
+        <script type="text/javascript" src="/static/js/min/cytoscapeweb.min.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+        <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+        <script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+        <script src="/static/aacrScript.js"></script>
+  
+        
+        <script type="text/javascript">
+            window.onload = function() {
+                // id of Cytoscape Web container div
+                var div_id = "cytoscapeweb";
+                
+                // NOTE: - the attributes on nodes and edges
+                //       - it also has directed edges, which will automatically display edge arrows
+                var xml = '\
+                <graphml>\
+                  <key id="label" for="all" attr.name="label" attr.type="string"/>\
+                  <key id="sel" for="node" attr.name="sel" attr.type="string"/>\
+                  <key id="weight" for="node" attr.name="weight" attr.type="double"/>\
+                  <graph edgedefault="directed">\
+                    <node id="1">\
+                        <data key="label">AACR</data>\
+                        <data key="weight">2.0</data>\
+                        <data key="sel">foo</data>\
+                    </node>\
+                    <node id="2">\
+                        <data key="label">RAS</data>\
+                        <data key="weight">1.5</data>\
+                        <data key="sel">bar</data>\
+                    </node>\
+                    <node id="3">\
+                        <data key="label">2013</data>\
+                        <data key="weight">1.0</data>\
+                        <data key="sel">baz</data>\
+                    </node>\
+                    <edge source="1" target="2">\
+                        <data key="label"></data>\
+                    </edge>\
+                    <edge source="1" target="3">\
+                        <data key="label"></data>\
+                    </edge>\
+                  </graph>\
+                </graphml>\
+                ';
+                
+                var widthMapper = { attrName: "label",  minValue: 1, maxValue: 5, minAttrValue: 0.1, maxAttrValue: 0.6 };
+                var colorMapper = { attrName: "label",  minValue: "#0000ff", maxValue: "#ff0000", minAttrValue: 0.1, maxAttrValue: 0.45 };
+                // visual style we will use
+                var visual_style = {
+                    global: {
+                        backgroundColor: "#ABCFD6"
+                    },
+                    nodes: {
+                        shape: "OCTAGON",
+                        borderWidth: 3,
+                        borderColor: "#ffffff",
+                        size: {
+                            defaultValue: 25,
+                            continuousMapper: { attrName: "weight", minValue: 25, maxValue: 75 }
+                        },
+                        color: {
+                            discreteMapper: {
+                                attrName: "sel",
+                                entries: [
+                                    { attrValue: "True", value: "#0B94B1" },
+                                    { attrValue: "baz", value: "#0B94B1" },
+                                    { attrValue: "foo", value: "#9A0B0B" },
+                                    { attrValue: "bar", value: "#dddd00" }
+                                ]
+                            }
+                        },
+                        labelHorizontalAnchor: "center"
+                    },
+                    edges: {
+                        width: { continuousMapper: widthMapper },
+                        color: { continuousMapper: colorMapper }
+                    }
+                };
+                
+                var draw_options = {
+	                    // your data goes here
+	                    network: xml,
+	                    
+	                    // show edge labels too
+	                    edgeLabelsVisible: true,
+	                    
+	                    // let's try another layout
+	                    layout: "Tree",
+	                    
+	                    visualStyle: visual_style,
+	                    // hide pan zoom
+	                    panZoomControlVisible: true 
+	              };
+                
+                // initialization options
+                var options = {
+                    swfPath: "/static/swf/CytoscapeWeb",
+                    flashInstallerPath: "/static/swf/playerProductInstall"
+                };
+                
+                var vis = new org.cytoscapeweb.Visualization(div_id, options);
+                 vis.addListener("select", "nodes", function(evt) {
+				    var nodes = evt.target;
+				    $.getJSON( "/getabstract/"+nodes[0].data.id, function( resp ){
+				       document.getElementById("lblAbstractTitle").innerHTML = resp.title
+				       document.getElementById("lblAbstractText").innerHTML = resp.abstract
+				       document.getElementById("lblAbstractId").innerHTML = nodes[0].data.id
+				    });
+				    document.getElementById("lblAbstractEmail").innerHTML = nodes[0].data.label
+				    
+				    //alert(nodes[0].data.label);
+				});
+
+                vis.ready(function() {
+                	
+                    // set the style programmatically
+                    document.getElementById("lnkLoadNetwork").onclick = function(){
+			   			$.getJSON( "/getnetwork", 
+			   				{ 
+			   				  threshold: document.getElementById("threshold").value
+			   				},  
+			   			function( resp ) {
+		                    draw_options.network = resp.network
+		                 	vis.draw(draw_options);
+		  			  	});
+                    };
+                    document.getElementById("lnkGetPresentationById").onclick = function(){
+			   			$.getJSON( "/getnetworkForNode", 
+			   				{ docId: document.getElementById('docId').value,
+			   				  threshold: document.getElementById("threshold").value
+			   				},
+			   				function( resp ) {
+		                    	draw_options.network = resp.network
+		                 		vis.draw(draw_options);
+		                    	
+		  			  	});
+                    };
+                    vis.addContextMenuItem("Get network for node", "nodes", 
+                            function (evt) {
+                                // Get the right-clicked node:
+                                var rootNode = evt.target;
+                                $.getJSON( "/getnetworkForNode", 
+            			   				{ docId: rootNode.data.id,
+            			   				  threshold: document.getElementById("threshold").value
+            			   				},
+            			   				function( resp ) {
+            		                    	draw_options.network = resp.network
+            		                 		vis.draw(draw_options);
+            		                    	
+            		  			  	});
+                                
+                            }
+                        );
+                    vis.select("nodes",[document.getElementById('docId')])
+                });
+
+                
+                
+                vis.draw(draw_options);
+            };
+        </script>
+
+ 
+
+       
+        <style>
+            * { margin: 0; padding: 0; font-family: Helvetica, Arial, Verdana, sans-serif; }
+            html, body { height: 100%; width: 100%; padding: 0; margin: 0; background-color: #f0f0f0; }
+            body { line-height: 1.5; color: #000000; font-size: 14px; }
+            /* The Cytoscape Web container must have its dimensions set. */
+            /*#cytoscapeweb { width: 100%; height: 80%; }*/
+            #note { width: 90%; text-align: left; padding-top: 1em; padding-left: 1em; padding-right: 1em}
+            .link { text-decoration: underline; color: #0b94b1; cursor: pointer; }
+            .title { text-decoration: bold}
+        </style>
+    </head>
+    <style>
+  /*.ui-autocomplete-loading {
+    background: white url('images/ui-anim_basic_16x16.gif') right center no-repeat;
+  }*/
+  #authors { width: 25em; }
+  </style>
+  
+    <body>
+    	<div id="header" style="background-color:#9A0B0B;text-align:center;">
+			<h1 style="margin-bottom:0;">AACR 2013: Networking the RAS community</h1>
+		</div>
+		<div id="cytoscapeweb" id="content" style="background-color:#EEEEEE;height:500px;width:85%;float:right">
+            Cytoscape Web will replace the contents of this div with your graph.
+        </div>
+        <div id="menu" style="background-color:white;height:500px;width:15%">
+        	<table><tr><td> <label for="docId">Presentation id: </label></td>
+        	<!-- <label for="authors">Select author:</label><input id="authors" size="50" /></br>OR</br> -->
+          <td><input id="docId" size="10"/></td></tr>
+		  <tr><td><label for="threshold">Threshold: </label></td>
+		  	<td><input id="threshold" size="10" value=".2"/></br></td>
+          </tr>
+          </table> 
+           <span class="link" id="lnkGetPresentationById">Get presenter network</span>  </br>
+      		<span class="link" id="lnkLoadNetwork">Load complete network</span>
+		</div>
+		
+        <div class="note" style="background-color:white;clear:both;text-align:left;">
+             <p/>
+             <table width="100%"><tr><td>Title: </td><td>
+             	<b></b><label class="title" id="lblAbstractTitle">No document selected</label></b>
+             	</td></tr>
+             	<tr><td>Id:</td>
+             	<td><label id="lblAbstractId"></td></tr>
+             	<tr><td>Email:</td>
+             	<td><label id="lblAbstractEmail"></label></td></tr>
+             	<tr><td valign="top">Abstract:</td>
+             	<td><label id="lblAbstractText"></label></td></tr>
+            </table>
+        </div>
+    </body>
+    
+</html>
