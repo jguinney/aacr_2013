@@ -29,17 +29,17 @@
                     <node id="1">\
                         <data key="label">AACR</data>\
                         <data key="weight">2.0</data>\
-                        <data key="sel">foo</data>\
+                        <data key="sel">ID</data>\
                     </node>\
                     <node id="2">\
                         <data key="label">RAS</data>\
                         <data key="weight">1.5</data>\
-                        <data key="sel">bar</data>\
+                        <data key="sel">NODE</data>\
                     </node>\
                     <node id="3">\
                         <data key="label">2013</data>\
                         <data key="weight">1.0</data>\
-                        <data key="sel">baz</data>\
+                        <data key="sel">EX</data>\
                     </node>\
                     <edge source="1" target="2">\
                         <data key="label"></data>\
@@ -51,29 +51,37 @@
                 </graphml>\
                 ';
                 
-                var widthMapper = { attrName: "label",  minValue: 1, maxValue: 5, minAttrValue: 0.1, maxAttrValue: 0.6 };
+                var widthMapper = { attrName: "label",  minValue: 1, maxValue: 15, minAttrValue: 0.1, maxAttrValue: 0.6 };
                 var colorMapper = { attrName: "label",  minValue: "#0000ff", maxValue: "#ff0000", minAttrValue: 0.1, maxAttrValue: 0.45 };
                 // visual style we will use
                 var visual_style = {
                     global: {
-                        backgroundColor: "#ABCFD6"
+                        backgroundColor: "#CFCFE6"
                     },
                     nodes: {
-                        shape: "OCTAGON",
+                        shape: {
+			    defaultValue: "CIRCLE",
+			    discreteMapper: {
+				attrName: "sel",
+				entries: [{attrValue: "ID", value: "OCTAGON"}]
+			    }
+			},
                         borderWidth: 3,
                         borderColor: "#ffffff",
                         size: {
-                            defaultValue: 25,
-                            continuousMapper: { attrName: "weight", minValue: 25, maxValue: 75 }
+                            defaultValue: 50,
+                            discreteMapper: { 
+				attrName: "sel", 
+				entries: [{ attrValue: "ID", value: 75 }]
+			    }
                         },
                         color: {
                             discreteMapper: {
                                 attrName: "sel",
                                 entries: [
-                                    { attrValue: "True", value: "#0B94B1" },
-                                    { attrValue: "baz", value: "#0B94B1" },
-                                    { attrValue: "foo", value: "#9A0B0B" },
-                                    { attrValue: "bar", value: "#dddd00" }
+                                    { attrValue: "EX", value: "#0B94B1" },
+                                    { attrValue: "ID", value: "#9A0B0B" },
+                                    { attrValue: "NODE", value: "#dddd00" }
                                 ]
                             }
                         },
@@ -81,7 +89,7 @@
                     },
                     edges: {
                         width: { continuousMapper: widthMapper },
-                        color: { continuousMapper: colorMapper }
+                        color: "#555" // { continuousMapper: colorMapper }
                     }
                 };
                 
@@ -93,7 +101,7 @@
 	                    edgeLabelsVisible: true,
 	                    
 	                    // let's try another layout
-	                    layout: "Tree",
+	                    layout: "Radial",
 	                    
 	                    visualStyle: visual_style,
 	                    // hide pan zoom

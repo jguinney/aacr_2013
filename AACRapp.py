@@ -65,7 +65,7 @@ def _makeGraphML(docIds,threshold,selDocIds=[]):
         strVar  += "<node id=\"" + docId + "\">"
         strVar  += "<data key=\"label\">" + abs2013Obj.rx(15)[0][index_dict[docId]]+ "</data>"
         if docId in selDocIds:
-            strVar += "<data key=\"sel\">True</data>"
+            strVar += "<data key=\"sel\">ID</data>"
         strVar += "</node>"
     for i in range(len(docIds)-1):
         idx1 = doc_index_dict[docIds[i]]
