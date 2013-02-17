@@ -62,8 +62,12 @@ def _makeGraphML(docIds,threshold,selDocIds=[]):
     
     selDocIds = set(selDocIds)
     for docId in docIds:
+	first = abs2013Obj.rx(12)[0][index_dict[docId]]
+	last = abs2013Obj.rx(13)[0][index_dict[docId]]
         strVar  += "<node id=\"" + docId + "\">"
-        strVar  += "<data key=\"label\">" + abs2013Obj.rx(15)[0][index_dict[docId]]+ "</data>"
+        strVar  += "<data key=\"label\">" +\
+			u"%s, %s" % (last.decode('utf-8'), first.decode('utf-8')) +\
+			"</data>"
         if docId in selDocIds:
             strVar += "<data key=\"sel\">ID</data>"
         strVar += "</node>"

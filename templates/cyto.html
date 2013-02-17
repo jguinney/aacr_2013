@@ -51,7 +51,7 @@
                 </graphml>\
                 ';
                 
-                var widthMapper = { attrName: "label",  minValue: 1, maxValue: 15, minAttrValue: 0.1, maxAttrValue: 0.6 };
+                var widthMapper = { attrName: "label",  minValue: 1, maxValue: 15, minAttrValue: 0.24, maxAttrValue: 0.4 };
                 var colorMapper = { attrName: "label",  minValue: "#0000ff", maxValue: "#ff0000", minAttrValue: 0.1, maxAttrValue: 0.45 };
                 // visual style we will use
                 var visual_style = {
@@ -85,7 +85,15 @@
                                 ]
                             }
                         },
-                        labelHorizontalAnchor: "center"
+                        labelHorizontalAnchor: "center",
+			labelFontWeight: "bold",
+			labelFontSize: {
+			    defaultValue: 14,
+			    discreteMapper: {
+				attrName: "sel",
+				entries: [{ attrValue: "ID", value: 18 }]
+			    }
+			}
                     },
                     edges: {
                         width: { continuousMapper: widthMapper },
@@ -98,7 +106,8 @@
 	                    network: xml,
 	                    
 	                    // show edge labels too
-	                    edgeLabelsVisible: true,
+	                    edgeLabelsVisible: false,
+			    edgeTooltipsEnabled: true,
 	                    
 	                    // let's try another layout
 	                    layout: "Radial",
@@ -207,11 +216,14 @@
         <div id="menu" style="background-color:white;height:500px;width:15%">
         	<table><tr><td> <label for="docId">Presentation id: </label></td>
         	<!-- <label for="authors">Select author:</label><input id="authors" size="50" /></br>OR</br> -->
-          <td><input id="docId" size="10"/></td></tr>
+          <td><input id="docId" size="10"/>
+	  <input type="hidden" id="threshold" name="threshold" value=".24"/>
+	  </td></tr>
+<!--
 		  <tr><td><label for="threshold">Threshold: </label></td>
-		  	<td><input id="threshold" size="10" value=".2"/></br></td>
+		  	<td><input id="threshold" size="10" value=".24"/></br></td>
           </tr>
-          </table> 
+-->          </table> 
            <span class="link" id="lnkGetPresentationById">Get presenter network</span>  </br>
       		<span class="link" id="lnkLoadNetwork">Load complete network</span>
 		</div>
@@ -219,7 +231,7 @@
         <div class="note" style="background-color:white;clear:both;text-align:left;">
              <p/>
              <table width="100%"><tr><td>Title: </td><td>
-             	<b></b><label class="title" id="lblAbstractTitle">No document selected</label></b>
+             	<b></b><label class="title" id="lblAbstractTitle">Select an author from the network above to view details.</label></b>
              	</td></tr>
              	<tr><td>Id:</td>
              	<td><label id="lblAbstractId"></td></tr>
