@@ -24,22 +24,23 @@
                 <graphml>\
                   <key id="label" for="all" attr.name="label" attr.type="string"/>\
                   <key id="sel" for="node" attr.name="sel" attr.type="string"/>\
+		  <key id="start" for="node" attr.name="start" attr.type="string"/>\
                   <key id="weight" for="node" attr.name="weight" attr.type="double"/>\
                   <graph edgedefault="directed">\
                     <node id="1">\
                         <data key="label">AACR</data>\
                         <data key="weight">2.0</data>\
-                        <data key="sel">ID</data>\
+                        <data key="start">T</data>\
                     </node>\
                     <node id="2">\
                         <data key="label">RAS</data>\
                         <data key="weight">1.5</data>\
-                        <data key="sel">NODE</data>\
+                        <data key="start">A</data>\
                     </node>\
                     <node id="3">\
                         <data key="label">2013</data>\
                         <data key="weight">1.0</data>\
-                        <data key="sel">EX</data>\
+                        <data key="start">B</data>\
                     </node>\
                     <edge source="1" target="2">\
                         <data key="label"></data>\
@@ -65,25 +66,31 @@
 			    defaultValue: "CIRCLE",
 			    discreteMapper: {
 				attrName: "sel",
-				entries: [{attrValue: "ID", value: "OCTAGON"}]
+				entries: [{attrValue: "T", value: "OCTAGON"}]
 			    }
 			},
                         borderWidth: 3,
-                        borderColor: "#ffffff",
+                        borderColor: {
+                            defaultValue: "#FFFFFF",
+                            discreteMapper: {
+                                attrName: "sel",
+                                entries: [{attrValue: "T", value: "#9A0B0B"}]
+                            } 
+			},
                         size: {
                             defaultValue: 50,
                             discreteMapper: { 
 				attrName: "sel", 
-				entries: [{ attrValue: "ID", value: 75 }]
+				entries: [{ attrValue: "T", value: 75 }]
 			    }
                         },
                         color: {
                             discreteMapper: {
-                                attrName: "sel",
+                                attrName: "start",
                                 entries: [
-                                    { attrValue: "EX", value: "#0B94B1" },
-                                    { attrValue: "ID", value: "#9A0B0B" },
-                                    { attrValue: "NODE", value: "#dddd00" }
+                                    { attrValue: "B", value: "#0B94B1" },
+                                    { attrValue: "T", value: "#9A0B0B" },
+                                    { attrValue: "A", value: "#dddd00" }
                                 ]
                             }
                         },
@@ -91,10 +98,10 @@
 			labelFontWeight: "bold",
 			labelFontSize: {
 			    defaultValue: 14,
-			    discreteMapper: {
-				attrName: "sel",
-				entries: [{ attrValue: "ID", value: 18 }]
-			    }
+                            discreteMapper: {
+                                attrName: "start",
+                                entries: [{ attrValue: "T", value: 18 }]
+                            }
 			}
                     },
                     edges: {
@@ -144,7 +151,8 @@
                     // set the style programmatically
                     document.getElementById("lnkLoadNetwork").onclick = function(){
 			   			$.getJSON( "/getnetwork", 
-			   				{ 
+			   				{ docId: document.getElementById('startId').value,
+							  startId: document.getElementById('startId').value,
 			   				  threshold: document.getElementById("threshold").value
 			   				},  
 			   			function( resp ) {
@@ -154,7 +162,8 @@
                     };
                     document.getElementById("lnkGetPresentationById").onclick = function(){
 			   			$.getJSON( "/getnetworkForNode", 
-			   				{ docId: document.getElementById('docId').value,
+			   				{ docId: document.getElementById('startId').value,
+							  startId: document.getElementById('startId').value,
 			   				  threshold: document.getElementById("threshold").value
 			   				},
 			   				function( resp ) {
@@ -163,12 +172,13 @@
 		                    	
 		  			  	});
                     };
-                    vis.addContextMenuItem("Get network for node", "nodes", 
+                    vis.addContextMenuItem("Get network for this author", "nodes", 
                             function (evt) {
                                 // Get the right-clicked node:
                                 var rootNode = evt.target;
                                 $.getJSON( "/getnetworkForNode", 
-            			   				{ docId: rootNode.data.id,
+            			   				{ startId: document.getElementById('startId').value,
+								  docId: rootNode.data.id,
             			   				  threshold: document.getElementById("threshold").value
             			   				},
             			   				function( resp ) {
@@ -179,7 +189,7 @@
                                 
                             }
                         );
-                    vis.select("nodes",[document.getElementById('docId')])
+                    vis.select("nodes",[document.getElementById('startId')])
 		
 		});
 
@@ -217,9 +227,9 @@
             Cytoscape Web will replace the contents of this div with your graph.
         </div>
         <div id="menu" style="background-color:white;height:500px;width:15%">
-        	<table><tr><td> <label for="docId">Presentation id: </label></td>
+        	<table><tr><td> <label for="startId">Presentation id: </label></td>
         	<!-- <label for="authors">Select author:</label><input id="authors" size="50" /></br>OR</br> -->
-          <td><input id="docId" size="10"/>
+          <td><input id="startId" size="10"/>
 	  <input type="hidden" id="threshold" name="threshold" value=".24"/>
 	  </td></tr>
 <!--
