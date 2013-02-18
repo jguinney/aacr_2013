@@ -53,10 +53,12 @@
                 
                 var widthMapper = { attrName: "label",  minValue: 1, maxValue: 15, minAttrValue: 0.24, maxAttrValue: 0.4 };
                 var colorMapper = { attrName: "label",  minValue: "#0000ff", maxValue: "#ff0000", minAttrValue: 0.1, maxAttrValue: 0.45 };
+
                 // visual style we will use
                 var visual_style = {
                     global: {
-                        backgroundColor: "#CFCFE6"
+                        backgroundColor: "#CFCFE6",
+			tooltipDelay: 100 //default: 800 ms
                     },
                     nodes: {
                         shape: {
@@ -97,7 +99,8 @@
                     },
                     edges: {
                         width: { continuousMapper: widthMapper },
-                        color: "#555" // { continuousMapper: colorMapper }
+                        color: "#555", // { continuousMapper: colorMapper }
+			tooltipText: { passthroughMapper: { attrName: "label" }}
                     }
                 };
                 
@@ -177,11 +180,11 @@
                             }
                         );
                     vis.select("nodes",[document.getElementById('docId')])
-                });
+		
+		});
 
-                
-                
                 vis.draw(draw_options);
+
             };
         </script>
 
