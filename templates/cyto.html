@@ -58,7 +58,7 @@
                 // visual style we will use
                 var visual_style = {
                     global: {
-                        backgroundColor: "#CFCFE6",
+                        backgroundColor: "#E0D9FF", // "#CFCFE6",
 			tooltipDelay: 100 //default: 800 ms
                     },
                     nodes: {
@@ -85,15 +85,17 @@
 			    }
                         },
                         color: {
+			    defaultValue: "#EEE",
                             discreteMapper: {
                                 attrName: "start",
                                 entries: [
                                     { attrValue: "B", value: "#0B94B1" },
-                                    { attrValue: "T", value: "#9A0B0B" },
+                                    { attrValue: "T", value: "#CA2B2B" },
                                     { attrValue: "A", value: "#dddd00" }
                                 ]
                             }
                         },
+			opacity: 1.0,
                         labelHorizontalAnchor: "center",
 			labelFontWeight: "bold",
 			labelFontSize: {
@@ -106,7 +108,7 @@
                     },
                     edges: {
                         width: { continuousMapper: widthMapper },
-                        color: "#555", // { continuousMapper: colorMapper }
+                        color: "#706B58", // { continuousMapper: colorMapper }
 			tooltipText: { passthroughMapper: { attrName: "label" }}
                     }
                 };
@@ -148,7 +150,6 @@
 
                 vis.ready(function() {
                 	
-                    // set the style programmatically
                     document.getElementById("lnkLoadNetwork").onclick = function(){
 			   			$.getJSON( "/getnetwork", 
 			   				{ docId: document.getElementById('startId').value,
@@ -189,13 +190,20 @@
                                 
                             }
                         );
-                    vis.select("nodes",[document.getElementById('startId')])
+                    vis.select("nodes",[document.getElementById('startId').value])
 		
 		});
 
                 vis.draw(draw_options);
 
             };
+
+		// support pressing return 
+		function submit(e) {
+			if(e && e.keyCode ==13) {
+				document.getElementById("lnkGetPresentationById").click();
+			}
+		}
         </script>
 
  
@@ -203,7 +211,7 @@
        
         <style>
             * { margin: 0; padding: 0; font-family: Helvetica, Arial, Verdana, sans-serif; }
-            html, body { height: 100%; width: 100%; padding: 0; margin: 0; background-color: #f0f0f0; }
+            html, body { height: 100%; width: 100%; padding: 0; margin: 0; background-color: #706B58; }
             body { line-height: 1.5; color: #000000; font-size: 14px; }
             /* The Cytoscape Web container must have its dimensions set. */
             /*#cytoscapeweb { width: 100%; height: 80%; }*/
@@ -220,28 +228,29 @@
   </style>
   
     <body>
-    	<div id="header" style="background-color:#9A0B0B;text-align:center;">
+    	<div id="header" style="background-color:#706B58;color:#fff;text-align:center;">
 			<h1 style="margin-bottom:0;">AACR 2013: Networking the RAS community</h1>
 		</div>
-		<div id="cytoscapeweb" id="content" style="background-color:#EEEEEE;height:500px;width:85%;float:right">
-            Cytoscape Web will replace the contents of this div with your graph.
-        </div>
-        <div id="menu" style="background-color:white;height:500px;width:15%">
-        	<table><tr><td> <label for="startId">Presentation id: </label></td>
+    <div style="height:65%;">
+        <div id="menu" style="background-color:white;padding-left:10px;margin:0px 0 10px 0;float:left;height:100%;width:220px;">
+	  <br />
+	  <label for="startId"><font size=+1>Enter your lastname: </font></label><br />
         	<!-- <label for="authors">Select author:</label><input id="authors" size="50" /></br>OR</br> -->
-          <td><input id="startId" size="10"/>
+          <input id="startId" size="25" onKeyPress = "return submit(event)"/>
 	  <input type="hidden" id="threshold" name="threshold" value=".24"/>
-	  </td></tr>
-<!--
-		  <tr><td><label for="threshold">Threshold: </label></td>
-		  	<td><input id="threshold" size="10" value=".24"/></br></td>
-          </tr>
--->          </table> 
-           <span class="link" id="lnkGetPresentationById">Get presenter network</span>  </br>
-      		<span class="link" id="lnkLoadNetwork">Load complete network</span>
+           	<div class="link" id="lnkGetPresentationById">Get your network</div> 
+ 		<br/>
+		<font size=+1>View clustered networks:</font>
+		<ul><li>
+      		<span class="link" id="lnkLoadNetwork">All authors</span>
+		</li></ul>
 		</div>
-		
-        <div class="note" style="background-color:white;clear:both;text-align:left;">
+
+	 <div id="cytoscapeweb" id="content" style="background-color:#E0D9FF;margin:10px 0 10px 240px;height:100%;">
+            Your network is loading...
+        </div>	
+   </div>
+        <div class="note" style="background-color:white;clear:both;text-align:left;height:250px;overflow:scroll">
              <p/>
              <table width="100%"><tr><td>Title: </td><td>
              	<b></b><label class="title" id="lblAbstractTitle">Select an author from the network above to view details.</label></b>
