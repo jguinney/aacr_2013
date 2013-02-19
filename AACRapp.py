@@ -3,6 +3,7 @@ import re
 from flask import Flask
 from flask import render_template, jsonify, request
 from rpy2.robjects.packages import importr
+from operator import itemgetter, attrgetter
 
 base = importr('base')
 app = Flask(__name__)
@@ -14,6 +15,9 @@ ro.r('load("./data/rasDocCor.rdata")')
 docC = ro.r('docC')
 # indices are with respect to R indices e.g. >= 1
 doc_index_dict = dict((value, idx+1) for idx,value in enumerate(tuple(base.colnames(docC))))
+lastNames = tuple(abs2013Obj.rx(13)[0])
+firstNames = tuple(abs2013Obj.rx(12)[0])
+controlNums = tuple(abs2013Obj.rx(1)[0])
 
 @app.route("/getabstract/<presenterId>")
 def getAbstract(presenterId):
@@ -27,11 +31,12 @@ def getAbstract(presenterId):
 @app.route("/getauthors")
 def getAuthors():
     queryStr = request.args.get('name_startsWith')
-    authorList = tuple(abs2013Obj.rx(13)[0])
     p = re.compile(queryStr +"*",re.IGNORECASE)
-    match = [x for x in authorList if p.match(x) != None] 
-    match = sorted(set(match))
-    return jsonify(authors=match)
+    matches = [[lastNames[i] + ', ' + firstNames[i],controlNums[i]]  for i,val in enumerate(lastNames) if p.match(val) != None]
+    
+    match = sorted(matches, key=itemgetter(0))
+    match_dict = [{"label":x[0],"value":x[1]} for x in match]
+    return jsonify(authors=match_dict)
 
 @app.route('/getnetworkForNode')
 def getNetworkForDocId():
@@ -77,6 +82,10 @@ def _makeGraphML(docIds,threshold,selDocIds=[]):
     
     return strVar 
 
+    
+def _buildAuthorDS():
+    DS = []
+    
     
 if __name__ == '__main__':
      app.run(host='0.0.0.0',debug=True)
