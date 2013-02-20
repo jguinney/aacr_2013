@@ -41,36 +41,46 @@ def getAuthors():
 @app.route('/getnetworkForNode')
 def getNetworkForDocId():
     docId = request.args.get('docId')
+    startId = request.args.get('startId')
     threshold = float(request.args.get('threshold'))
     v = tuple(docC.rx(doc_index_dict[docId],True))
     all_doc_ids = base.colnames(docC)
     docIds = [all_doc_ids[i] for i,val in enumerate(v) if val > threshold]
     docIds.append(docId)
-    return jsonify(network=_makeGraphML(docIds,threshold,[docId]))
+    return jsonify(network=_makeGraphML(docIds,threshold,[startId],[docId]))
     
 @app.route('/getnetwork')
 def getNetwork():
+    startId = request.args.get('startId')
     threshold = float(request.args.get('threshold'))
     all_doc_ids = tuple(base.colnames(docC))
-    return jsonify(network=_makeGraphML(all_doc_ids,threshold))
+    return jsonify(network=_makeGraphML(all_doc_ids,threshold,[startId]))
     
 @app.route('/')
 def hello():
     return render_template('cyto.html')
 
-def _makeGraphML(docIds,threshold,selDocIds=[]):
+def _makeGraphML(docIds,threshold,startIds=[],selDocIds=[]):
     strVar = "<graphml>\
       <key id=\"label\" for=\"node\" attr.name=\"label\" attr.type=\"string\"/>\
       <key id=\"label\" for=\"edge\" attr.name=\"label\" attr.type=\"float\"/>\
       <key id=\"sel\" for=\"node\" attr.name=\"sel\" attr.type=\"string\"/>\
+      <key id=\"start\" for=\"node\" attr.name=\"start\" attr.type=\"string\"/>\
       <graph edgedefault=\"undirected\">"
     
     selDocIds = set(selDocIds)
+    selStartIds = set(startIds)
     for docId in docIds:
+	first = abs2013Obj.rx(12)[0][index_dict[docId]]
+	last = abs2013Obj.rx(13)[0][index_dict[docId]]
         strVar  += "<node id=\"" + docId + "\">"
-        strVar  += "<data key=\"label\">" + abs2013Obj.rx(15)[0][index_dict[docId]]+ "</data>"
+        strVar  += "<data key=\"label\">" +\
+			u"%s, %s" % (last.decode('utf-8'), first.decode('utf-8')) +\
+			"</data>"
         if docId in selDocIds:
-            strVar += "<data key=\"sel\">True</data>"
+            strVar += "<data key=\"sel\">T</data>"
+	if docId in selStartIds:
+	    strVar += "<data key=\"start\">T</data>"
         strVar += "</node>"
     for i in range(len(docIds)-1):
         idx1 = doc_index_dict[docIds[i]]
