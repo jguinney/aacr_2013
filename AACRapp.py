@@ -4,50 +4,37 @@ from flask import Flask
 from flask import render_template, jsonify, request
 from rpy2.robjects.packages import importr
 from operator import itemgetter, attrgetter
-
+import AACRStruct
 base = importr('base')
+
 app = Flask(__name__)
 
-ro.r('load("./data/aacrAbstr2013.rda")')
-abs2013Obj = ro.r('abs2013')
-index_dict = dict((value, idx) for idx,value in enumerate(abs2013Obj.rx(2)[0]))
-ro.r('load("./data/rasDocCor.rdata")')
-docC = ro.r('docC')
-# indices are with respect to R indices e.g. >= 1
-doc_index_dict = dict((value, idx+1) for idx,value in enumerate(tuple(base.colnames(docC))))
-lastNames = tuple(abs2013Obj.rx(13)[0])
-firstNames = tuple(abs2013Obj.rx(12)[0])
-controlNums = tuple(abs2013Obj.rx(1)[0])
+aacr = AACRStruct.AACRDataStruct()
 
 @app.route("/getabstract/<presenterId>")
 def getAbstract(presenterId):
-    idx = index_dict[presenterId]
-    title = abs2013Obj.rx(3)[0][idx]
-    abstract = abs2013Obj.rx(4)[0][idx]
-    lastName = abs2013Obj.rx(13)[0][idx]
-    
-    return jsonify(title=title,lastName=lastName,abstract=abstract)
+    abstract = aacr.getAbstractForId(presenterId)
+    return jsonify(title=abstract.title,lastName="Foo",abstract=abstract.abstract)
 
 @app.route("/getauthors")
 def getAuthors():
-    queryStr = request.args.get('name_startsWith')
-    p = re.compile(queryStr +"*",re.IGNORECASE)
-    matches = [[lastNames[i] + ', ' + firstNames[i],controlNums[i]]  for i,val in enumerate(lastNames) if p.match(val) != None]
-    
-    match = sorted(matches, key=itemgetter(0))
-    match_dict = [{"label":x[0],"value":x[1]} for x in match]
-    return jsonify(authors=match_dict)
+    queryStr = request.args.get('name_startsWith').lower()
+     
+    authors = aacr.getAuthorsForSearch(queryStr)
+    authorDict = [{"label": x.formattedName() + " [" + x.uniqueId + "]", "value": x.uniqueId} for x in authors]
+    return jsonify(authors=authorDict)
 
 @app.route('/getnetworkForNode')
 def getNetworkForDocId():
     docId = request.args.get('docId')
-    startId = request.args.get('startId')
-    threshold = float(request.args.get('threshold'))
-    v = tuple(docC.rx(doc_index_dict[docId],True))
-    all_doc_ids = base.colnames(docC)
-    docIds = [all_doc_ids[i] for i,val in enumerate(v) if val > threshold]
+    #startId = request.args.get('startId')
+    top = int(request.args.get('top'))
+   
+    edges = aacr.getTopEdgesForAbstract(docId, top)
+    docIds = [edge.toId for edge in edges]
     docIds.append(docId)
-    return jsonify(network=_makeGraphML(docIds,threshold,[startId],[docId]))
+    
+    return jsonify(network=_makeJSONGraph(docIds, edges))
     
 @app.route('/getnetwork')
 def getNetwork():
@@ -55,10 +42,88 @@ def getNetwork():
     threshold = float(request.args.get('threshold'))
     all_doc_ids = tuple(base.colnames(docC))
     return jsonify(network=_makeGraphML(all_doc_ids,threshold,[startId]))
+
+@app.route('/getGlobalNetwork')
+def getGlobalNetwork():
+    return jsonify(network=_makeJSONGraphForAPCcluster())
+
     
 @app.route('/')
 def hello():
     return render_template('cyto.html')
+
+def _makeJSONGraph(uniqueIds, edges):
+    dataSchema = {}
+    dataSchema['nodes'] = [{"name": "label","type":"string"},\
+                           {"name": "tooltip","type":"string"},\
+                           {"name": "year","type":"string"}]
+    dataSchema['edges'] = [{"name": "weight","type":"float"}]
+
+    data = {"nodes": _makeJSONNodes(uniqueIds),"edges": _makeJSONEdges(edges) }
+    network = {"data":data,"dataSchema":dataSchema}
+    
+    return network
+
+def __chunkText(text, chunkSize=20):
+    return NULL
+
+def _makeJSONEdges(edges):
+    tmp  = [{"id": "edge"+str(idx), "target": edge.toId, "source": edge.fromId, "weight": "{0:.2f}".format(edge.edgeWeight)} for idx,edge in enumerate(edges)]
+    return tmp
+
+def _makeJSONNodes(uniqueIds):
+    abstracts = [aacr.getAbstractForId(id) for id in uniqueIds]
+    tmp = [{"id": abs.uniqueId,\
+            "label": abs.firstAuthor().formattedName() + "\n" + abs.lastAuthor().formattedName() ,\
+            "year": abs.year,\
+            "tooltip": abs.title + "\n" + abs.lastAuthor().institution } for abs in abstracts]
+    return tmp
+
+def _makeJSONNodesGlobalNetwork(uniqueIds, levels):
+    abstracts = [aacr.getAbstractForId(id) for id in uniqueIds]
+    def findLevel(abs):
+        for i in reversed(range(len(levels))):
+            if(abs.uniqueId in levels[i]):
+                return (i+1)
+        return 0
+        
+    tmp = [{"id": abs.uniqueId,\
+            "year": abs.year,\
+            "tooltip": abs.firstAuthor().formattedName() + "\n" + abs.lastAuthor().formattedName() + "\n"\
+            + abs.title + "\n" + abs.lastAuthor().institution,
+            "level": findLevel(abs) } for abs in abstracts]
+    return tmp
+
+def _makeJSONGraphForAPCcluster():
+    
+    ro.r('load("data/APCcluster.rda")')
+    edgeGroups = ro.r('edges')
+    levels = [set(lvl) for lvl in ro.r('levels')]
+
+    
+    groupIds = tuple(base.names(edgeGroups))
+    edges = []
+    for i in range(len(groupIds)):
+        sourceId = groupIds[i]
+        for targetId in list(edgeGroups[i]):
+            if sourceId != targetId:
+                edges.append(aacr.getEdgeForAbstracts(sourceId, targetId))
+    
+    dataSchema = {}
+    dataSchema['nodes'] = [{"name": "label","type":"string"},\
+                           {"name": "tooltip","type":"string"},\
+                           {"name": "year","type":"string"},\
+                           {"name": "level","type":"integer"}]
+    dataSchema['edges'] = [{"name": "weight","type":"float"}]
+    
+    data = {"nodes": _makeJSONNodesGlobalNetwork(aacr.getAllIds(),levels),\
+            "edges": _makeJSONEdges(edges) }
+    network = {"data":data,"dataSchema":dataSchema}
+    
+    return network
+    
+    
+
 
 def _makeGraphML(docIds,threshold,startIds=[],selDocIds=[]):
     strVar = "<graphml>\
@@ -92,10 +157,6 @@ def _makeGraphML(docIds,threshold,startIds=[],selDocIds=[]):
     
     return strVar 
 
-    
-def _buildAuthorDS():
-    DS = []
-    
-    
+
 if __name__ == '__main__':
      app.run(host='0.0.0.0',debug=True)
