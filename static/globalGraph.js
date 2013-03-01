@@ -156,7 +156,7 @@ initializeGlobalGraph = function() {
 
 
 	vis2.ready(function() {
-
+/*
 		document.getElementById("lnkGetPresentationById").onclick = function() {
 			$.getJSON("/getnetworkForNode", {
 				docId : document.getElementById('startId').value,
@@ -168,7 +168,7 @@ initializeGlobalGraph = function() {
 
 			});
 		};
-
+*/
 		vis2.select("nodes", [ document.getElementById('startId').value ])
 	});
 
