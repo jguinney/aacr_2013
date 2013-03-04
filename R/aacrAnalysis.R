@@ -3,7 +3,7 @@ library(tm)
 library(slam)
 library(wordcloud)
 
-load("data/aacr/aacrAbstr2013.rda")
+load("data/aacr.rda")
 
 strip.markup <- function(x){
   gsub("</?[A-Za-z]+>|<[A-Za-z]+\\s?/>"," ", x)
@@ -23,9 +23,9 @@ abstract.stop.words <- c("cell","cancer","tumor","express","studi","activ","resu
                 "demonstr","found","includ","determin","suggest","conclusion",
                 "background","effect","identifi","data","potenti")
 
-doc.titles <- sapply(abs2013$ABSTRACT.TITLE, strip.markup,USE.NAMES = FALSE)
-docNums <- abs2013$PRESENTATIONNUMBER
-corpus <- Corpus(VectorSource(abs2013$Abstract))
+doc.titles <- sapply(abstractTbl$ABSTRACT.TITLE, strip.markup,USE.NAMES = FALSE)
+docids <- abstractTbl$id
+corpus <- Corpus(VectorSource(abstractTbl$Abstract))
 corpus <- tm_map(corpus, strip.markup)
 corpus <- tm_map(corpus, stripWhitespace)
 corpus <- tm_map(corpus, concatenate_and_split_hyphens)
@@ -36,9 +36,48 @@ corpus <- tm_map(corpus, removeAloneNumbers)
 corpus <- tm_map(corpus, stemDocument)
 corpus <- tm_map(corpus, removeWords, abstract.stop.words)
 
-dtm <- DocumentTermMatrix(corpus)
+dtm <- DocumentTermMatrix(corpus,
+                          control = list(weighting = function(x) weightTfIdf(x, normalize = TRUE)))
+word.freq <- as.numeric(as.array(slam::rollup(dtm, 1, FUN=function(x) { sum(x > 0)})) )
+dtm.sub <- dtm[, word.freq > 2]
+D <- as.matrix(dissimilarity(dtm.sub, method = "cosine"))
+S <- 1 - D
+diag(S) <- 0
+colnames(S) <- docids
+rownames(S) <- docids
+save(S, file="data/aacrSimilarityMatrix_Cosine.rdata")
+
+
+######################
+# affinity propagation clustering
+library(apcluster)
+ids = colnames(S)
+load(file="data/aacrSimilarityMatrix_Cosine.rdata")
+cluster1 = apcluster(S)
+cluster2 = apcluster(S[ids %in% names(cluster1@exemplars), ids %in% names(cluster1@exemplars)])
+cluster3 = apcluster(S[ids %in% names(cluster2@exemplars), ids %in% names(cluster2@exemplars)])
+cluster4 = apcluster(S[ids %in% names(cluster3@exemplars), ids %in% names(cluster3@exemplars)])
+clusters = c(cluster1, cluster2, cluster3, cluster4)
+
+edges = list()
+levels = list()
+for(j in 1:4){
+  cluster = clusters[[j]]
+  exemplars <- names(cluster@exemplars)
+  for(i in 1:length(exemplars)){
+    ex <- exemplars[i]
+    edges[[ex]] <- c(edges[[ex]], names(cluster@clusters[[i]]))
+  }
+  levels[[j]] <- exemplars
+}
+save(edges, levels, file="data/APCcluster.rda")
+
+
+#################################################
+### older analysis
+                 
 # only keep words that show up more than 2 times
-word.freq <- as.numeric(as.array(slam::rollup(dtm, 1, FUN=function(x) { sum(x > 1)})) )
+word.freq <- as.numeric(as.array(slam::rollup(dtm, 1, FUN=function(x) { sum(x > 0)})) )
 idxs <- order(word.freq,decreasing=T)
 tmp <- cbind(word.freq[idxs], colnames(dtm)[idxs])
 dtm <- dtm[, word.freq > 2]
@@ -48,11 +87,12 @@ M <- as.matrix(dtm)
 
 
 # pick up ras related docs
-ras.term.idxs <- which(colnames(M) %in% c("ras","kras","nras","hras","egfr","raf","braf","erk","mek"))
-ras.mask <- rowSums(M[, ras.term.idxs]) > 0
-ras_dtm <- M[ras.mask,]
-ras_dtm <- ras_dtm[, colSums(ras_dtm) > 0]
-ras_titles <- doc.titles[ras.mask]
+#ras.term.idxs <- which(colnames(M) %in% c("ras","kras","nras","hras","egfr","raf","braf","erk","mek"))
+#ras.mask <- rowSums(M[, ras.term.idxs]) > 0
+#ras_dtm <- M[ras.mask,]
+#ras_dtm <- ras_dtm[, colSums(ras_dtm) > 0]
+#ras_titles <- doc.titles[ras.mask]
+ras_dtm <- M
 
 # local log weighting and global inverse weight
 global.inv.weight <- apply(ras_dtm, 2, function(x){
