@@ -37,6 +37,13 @@ g6<-data.frame(mrow=c(col(docC)),
 ## Now, simplify and export
 names(g6)<-c("ab1","ab2","weight")
 g7<-g6[g6$ab1<g6$ab2,] #top half of matrix
-ab1<-sapply(g7$ab1, function(x) r[x])
+nodes<-as.vector(rownames(docC))
+ab1<-sapply(g7$ab1, function(x) nodes[x])
+ab2<-sapply(g7$ab2, function(x) nodes[x])
+g7$ab1<-ab1
+g7$ab2<-ab2
 g8<-g7[g7$weight>0.24,]
 write.table(g8,file="/git/aacr2013/data/graph_0.24.csv",sep=",",row.names=F, quote=F)
+
+## Export other data.frame for node attributes
+write.table(abs2013,file="/git/aacr2013/data/graph_node_attrs.tab",sep="\t",row.names=F, quote=F)
