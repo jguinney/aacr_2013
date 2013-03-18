@@ -14,7 +14,10 @@ aacr = AACRStruct.AACRDataStruct()
 @app.route("/getabstract/<presenterId>")
 def getAbstract(presenterId):
     abstract = aacr.getAbstractForId(presenterId)
-    return jsonify(title=abstract.title,lastName="Foo",abstract=abstract.abstract)
+    authorStr = ["<a target=\"_blank\" href=\"mailto:" + author.email + "\">" +  author.lastName + ", " + author.firstName + "</a>" \
+                  for author in abstract.authors]
+    authorStr = "; ".join(authorStr)
+    return jsonify(title=abstract.title,authors=authorStr,abstract=abstract.abstract)
 
 @app.route("/getauthors")
 def getAuthors():
@@ -47,6 +50,9 @@ def getNetwork():
 def getGlobalNetwork():
     return jsonify(network=_makeJSONGraphForAPCcluster())
 
+@app.route("/info")
+def info():
+    return render_template("info.html")
     
 @app.route('/')
 def hello():
@@ -56,7 +62,9 @@ def _makeJSONGraph(uniqueIds, edges):
     dataSchema = {}
     dataSchema['nodes'] = [{"name": "label","type":"string"},\
                            {"name": "tooltip","type":"string"},\
-                           {"name": "year","type":"string"}]
+                           {"name": "year","type":"string"},\
+                           {"name": "lat","type": "string"},\
+                           {"name": "lng","type": "string"}]
     dataSchema['edges'] = [{"name": "weight","type":"float"}]
 
     data = {"nodes": _makeJSONNodes(uniqueIds),"edges": _makeJSONEdges(edges) }
@@ -76,6 +84,8 @@ def _makeJSONNodes(uniqueIds):
     tmp = [{"id": abs.uniqueId,\
             "label": abs.firstAuthor().formattedName() + "\n" + abs.lastAuthor().formattedName() ,\
             "year": abs.year,\
+            "lat": abs.lat,\
+            "lng": abs.lng,\
             "tooltip": abs.title + "\n" + abs.lastAuthor().institution } for abs in abstracts]
     return tmp
 
@@ -84,8 +94,8 @@ def _makeJSONNodesGlobalNetwork(uniqueIds, levels):
     def findLevel(abs):
         for i in reversed(range(len(levels))):
             if(abs.uniqueId in levels[i]):
-                return (i+1)
-        return 0
+                return str(i+1)
+        return "0"
         
     tmp = [{"id": abs.uniqueId,\
             "year": abs.year,\
@@ -110,10 +120,11 @@ def _makeJSONGraphForAPCcluster():
                 edges.append(aacr.getEdgeForAbstracts(sourceId, targetId))
     
     dataSchema = {}
-    dataSchema['nodes'] = [{"name": "label","type":"string"},\
+    dataSchema['nodes'] = [{"name": "id","type":"string"},\
+                           {"name": "label","type":"string"},\
                            {"name": "tooltip","type":"string"},\
                            {"name": "year","type":"string"},\
-                           {"name": "level","type":"integer"}]
+                           {"name": "level","type":"string"}]
     dataSchema['edges'] = [{"name": "weight","type":"float"}]
     
     data = {"nodes": _makeJSONNodesGlobalNetwork(aacr.getAllIds(),levels),\
@@ -122,41 +133,6 @@ def _makeJSONGraphForAPCcluster():
     
     return network
     
-    
-
-
-def _makeGraphML(docIds,threshold,startIds=[],selDocIds=[]):
-    strVar = "<graphml>\
-      <key id=\"label\" for=\"node\" attr.name=\"label\" attr.type=\"string\"/>\
-      <key id=\"label\" for=\"edge\" attr.name=\"label\" attr.type=\"float\"/>\
-      <key id=\"sel\" for=\"node\" attr.name=\"sel\" attr.type=\"string\"/>\
-      <key id=\"start\" for=\"node\" attr.name=\"start\" attr.type=\"string\"/>\
-      <graph edgedefault=\"undirected\">"
-    
-    selDocIds = set(selDocIds)
-    selStartIds = set(startIds)
-    for docId in docIds:
-	first = abs2013Obj.rx(12)[0][index_dict[docId]]
-	last = abs2013Obj.rx(13)[0][index_dict[docId]]
-        strVar  += "<node id=\"" + docId + "\">"
-        strVar  += "<data key=\"label\">" +\
-			u"%s, %s" % (last.decode('utf-8'), first.decode('utf-8')) +\
-			"</data>"
-        if docId in selDocIds:
-            strVar += "<data key=\"sel\">T</data>"
-	if docId in selStartIds:
-	    strVar += "<data key=\"start\">T</data>"
-        strVar += "</node>"
-    for i in range(len(docIds)-1):
-        idx1 = doc_index_dict[docIds[i]]
-        for j in range(i+1, len(docIds)):
-            idx2 = doc_index_dict[docIds[j]]
-            if(docC.rx(idx1,idx2)[0] > threshold):
-                strVar  += "<edge source=\"" + docIds[i] + "\" target=\"" + docIds[j] + "\"><data key=\"label\">" + '%.2f' % docC.rx(idx1,idx2)[0] + "</data></edge>"
-    strVar  += "</graph></graphml>" 
-    
-    return strVar 
-
 
 if __name__ == '__main__':
      app.run(host='0.0.0.0',debug=True)

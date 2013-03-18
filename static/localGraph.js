@@ -1,3 +1,5 @@
+
+
 initializeLocalGraph = function() {
 
 	// id of Cytoscape Web container div
@@ -171,66 +173,39 @@ initializeLocalGraph = function() {
 
 	var vis = new org.cytoscapeweb.Visualization("cytoscapeweb", options);
 
-	vis
-			.addListener(
+	vis.addListener(
 					"select",
 					"nodes",
 					function(evt) {
 						var nodes = evt.target;
-						$
-								.getJSON(
-										"/getabstract/" + nodes[0].data.id,
-										function(resp) {
-											document
-													.getElementById("lblAbstractTitle").innerHTML = resp.title
-											document
-													.getElementById("lblAbstractText").innerHTML = resp.abstract
-											document
-													.getElementById("lblAbstractId").innerHTML = nodes[0].data.id
-										});
-						document.getElementById("lblAbstractEmail").innerHTML = nodes[0].data.label
-
-						// alert(nodes[0].data.label);
+						showAbstractData(nodes[0].data.id)
 					});
 
+	var loadLocalNetwork = function(){
+		$.getJSON($SCRIPT_ROOT + "/getnetworkForNode", {
+			docId : document.getElementById('startId').value,
+			startId : document.getElementById('startId').value,
+			top : document.getElementById("top").value
+		}, function(resp) {
+			draw_options.network = resp.network
+			vis.draw(draw_options);
+			initializeMap(document.getElementById('startId').value, resp.network)
+			updateGlobalGraph()
+		});
+	}
 	vis.ready(function() {
 
-		document.getElementById("lnkLoadNetwork").onclick = function() {
-			$.getJSON("/getnetwork", {
-				docId : document.getElementById('startId').value,
-				startId : document.getElementById('startId').value,
-				top : document.getElementById("top").value
-			}, function(resp) {
-				draw_options.network = resp.network
-
-				vis.draw(draw_options);
-			});
-		};
 		document.getElementById("lnkGetPresentationById").onclick = function() {
-			$.getJSON("/getnetworkForNode", {
-				docId : document.getElementById('startId').value,
-				startId : document.getElementById('startId').value,
-				top : document.getElementById("top").value
-			}, function(resp) {
-				draw_options.network = resp.network
-				vis.draw(draw_options);
-
-			});
+			loadLocalNetwork()
 		};
 		vis.addContextMenuItem("Get network for this author", "nodes",
 				function(evt) {
+					
 					// Get the right-clicked node:
+			
 					var rootNode = evt.target;
-					$.getJSON("/getnetworkForNode", {
-						startId : document.getElementById('startId').value,
-						docId : rootNode.data.id,
-						threshold : document.getElementById("threshold").value
-					}, function(resp) {
-						draw_options.network = resp.network
-						vis.draw(draw_options);
-
-					});
-
+					document.getElementById('startId').value = rootNode.data.id
+					loadLocalNetwork()
 				});
 		vis.select("nodes", [ document.getElementById('startId').value ])
 	});

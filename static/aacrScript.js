@@ -3,7 +3,7 @@ $(function() {
     $( "#startId" ).autocomplete({
       source: function( request, response ) {
         $.ajax({
-          url: "/getauthors",
+          url: $SCRIPT_ROOT + "/getauthors",
           dataType: "json",
           data: {
             name_startsWith: request.term

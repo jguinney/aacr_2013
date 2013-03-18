@@ -3,22 +3,44 @@
 
 <head>
 <title>AACR 2013: Connecting RAS research community</title>
-
+<script type=text/javascript>
+  var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+</script>
 <script type="text/javascript" src="/static/js/min/json2.min.js"></script>
 <script type="text/javascript" src="/static/js/min/AC_OETags.min.js"></script>
 <script type="text/javascript" src="/static/js/min/cytoscapeweb.min.js"></script>
 <script type="text/javascript"
 	src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgSBErcst7UKAyYLr0yScDrDxKiQ9FjEA&sensor=false">
+</script>
 <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
 <script src="http://code.jquery.com/ui/1.10.1/jquery-ui.js"></script>
 <script src="/static/aacrScript.js"></script>
+<script type="text/javascript" src="/static/common.js"></script>
 <script type="text/javascript" src="/static/localGraph.js"></script>
 <script type="text/javascript" src="/static/globalGraph.js"></script>
+<script type="text/javascript" src="/static/googleMap.js"></script>
 
 <script>
 	window.onload = function() {
 		initializeLocalGraph()
 		initializeGlobalGraph()
+	}
+	
+	openInfo = function(){
+		window.open("/info",'','width=600,height=400')	
+	}
+	
+	showDiv = function(divName){
+		divs = ["cytoscapeweb","cytoscapeweb2","map_canvas"]
+		
+		for(i = 0; i < divs.length; ++i){
+			document.getElementById(divs[i]).style.position = "absolute"
+			document.getElementById(divs[i]).style.left = "-9999px"
+		}
+		document.getElementById(divName).style.position = "relative"
+		document.getElementById(divName).style.left = "0"
 	}
 </script>
 
@@ -96,35 +118,26 @@ body {
 			</select>
 
 			<div class="link" id="lnkGetPresentationById">Get your network</div>
-			<br /> <font size=+1>View clustered networks:</font>
-			<ul>
-				<li><span class="link" id="lnkLoadNetwork">All authors</span></li>
-			</ul>
+			<br /> <font size=+1>Network views:</font>
 			<div align="left">
-				<br> <input type="radio" name="GraphView" value="Neighbors"
+				<br> <input type="radio" name="GraphView" value="cytoscapeweb"
 					checked> First neighbors</input><br />
-				<input type="radio" name="GraphView" value="APCluster"> Full
-					network</input>
+				<input type="radio" name="GraphView" value="map_canvas"> Map
+					view</input><br/>
+				<input type="radio" name="GraphView" value="cytoscapeweb2"> Full
+					network</input><br/>
 				<script>
 					var radios = document.getElementsByName('GraphView')
 					for (i = 0; i < radios.length; ++i) {
 						radios[i].onclick = function() {
-							if (this.value == "Neighbors") {
-								document.getElementById("cytoscapeweb").style.position = "relative"
-								document.getElementById("cytoscapeweb").style.left = "0"
-								document.getElementById("cytoscapeweb2").style.position = "absolute"
-								document.getElementById("cytoscapeweb2").style.left = "-9999px"
-							} else {
-								document.getElementById("cytoscapeweb2").style.position = "relative"
-								document.getElementById("cytoscapeweb2").style.left = "0"
-								document.getElementById("cytoscapeweb").style.position = "absolute"
-								document.getElementById("cytoscapeweb").style.left = "-9999px"
-							}
-
+							showDiv(this.value)
 						}
 					}
 				</script>
 			</div>
+			<p/>
+			<span class="link" onClick='openInfo()'>Help/Info</span>
+			
 
 		</div>
 
@@ -135,6 +148,9 @@ body {
 		<div id="cytoscapeweb2"
 			style="background-color: #E0D9FF; margin: 10px 0 10px 240px; position: absolute; left: -9999px">
 			Global network view...</div>
+		<div id="map_canvas"
+			style="background-color: #E0D9FF; margin: 10px 0 10px 240px; position: absolute; left: -9999px; width: 70%; height: 100%">
+			Google maps view...</div>
 
 	</div>
 	<div class="note"
@@ -142,17 +158,17 @@ body {
 		<p />
 		<table width="100%">
 			<tr>
-				<td>Title:</td>
+				<td valign='top'>Title:</td>
 				<td><b></b><label class="title" id="lblAbstractTitle">Select
 						an author from the network above to view details.</label></b></td>
 			</tr>
 			<tr>
-				<td>Id:</td>
+				<td valign='top'>Id:</td>
 				<td><label id="lblAbstractId"></td>
 			</tr>
 			<tr>
-				<td>Email:</td>
-				<td><label id="lblAbstractEmail"></label></td>
+				<td valign='top'>Authors:</td>
+				<td><label id="lblAbstractAuthors"></label></td>
 			</tr>
 			<tr>
 				<td valign="top">Abstract:</td>
