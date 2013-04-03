@@ -87,9 +87,9 @@ initializeLocalGraph = function() {
 			borderColor : {
 				defaultValue : "#FFFFFF",
 				discreteMapper : {
-					attrName : "sel",
+					attrName : "hasSurvey",
 					entries : [ {
-						attrValue : "T",
+						attrValue : "yes",
 						value : "#9A0B0B"
 					} ]
 				}

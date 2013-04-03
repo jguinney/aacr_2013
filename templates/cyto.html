@@ -32,6 +32,11 @@
 		window.open("/info",'','width=600,height=400')	
 	}
 	
+	openSurvey = function(){
+		window.open("/survey",'','width=600,height=400')	
+	}
+	
+	
 	showDiv = function(divName){
 		divs = ["cytoscapeweb","cytoscapeweb2","map_canvas"]
 		
@@ -136,7 +141,8 @@ body {
 				</script>
 			</div>
 			<p/>
-			<span class="link" onClick='openInfo()'>Help/Info</span>
+			<!--  <span class="link" onClick='openInfo()'>Help/Info</span>-->
+			<span class="link" onClick='openSurvey()'>Survey</span>
 			
 
 		</div>
@@ -173,6 +179,10 @@ body {
 			<tr>
 				<td valign="top">Abstract:</td>
 				<td><label id="lblAbstractText"></label></td>
+			</tr>
+			<tr>
+				<td valign="top">Survey:</td>
+				<td><label id="lblSurveyText"></label></td>
 			</tr>
 		</table>
 	</div>

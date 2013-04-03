@@ -23,8 +23,11 @@ class AACRAuthor:
     def formattedName(self):
         return self.lastName + ", " + self.firstName
     
+    def hasSurveyResponse(self):
+        return self.survey1 != None or self.survey2 != None or self.survey3 != None
+    
 class AACRAbstract:
-    def __init__(self, uniqueId, presentationId, controlId, title, year,abstract,lat,lng):
+    def __init__(self, uniqueId, presentationId, controlId, title, year,abstract,lat,lng,survey):
         self.uniqueId = uniqueId
         self.presentationId = presentationId
         self.title = title
@@ -32,6 +35,7 @@ class AACRAbstract:
         self.abstract = abstract
         self.lat = lat
         self.lng = lng
+        self.survey = survey
         self.authors = []
         
     def firstAuthor(self):
@@ -39,9 +43,12 @@ class AACRAbstract:
     
     def lastAuthor(self):
         return self.authors[-1]
+    
+    def hasSurvey(self):
+        return self.survey != ""
 
 class AACRDataStruct:
-    def __init__(self, similarityFile="data/aacrSimilarityMatrix_Cosine.rdata", metadataFile="data/aacrWithLocation.rda"):
+    def __init__(self, similarityFile="data/aacrSimilarityMatrix_Cosine.rdata", metadataFile="data/aacrWithLocationAndSurvey.rda"):
         
         # metadata load
         ro.r('load("' + metadataFile +'")')
@@ -56,11 +63,12 @@ class AACRDataStruct:
         title = abstractTbl.rx('ABSTRACT.TITLE')[0]
         lat = abstractTbl.rx('lat')[0]
         lng = abstractTbl.rx('lng')[0]
+        survey = abstractTbl.rx('survey')[0]
                 
         metaDict = {}
         for i in range(len(uniqueId)):
             metaDict[uniqueId[i]] = AACRAbstract(uniqueId[i],presentationId[i], controlId[i],\
-                                                 title[i],year[i],abstract[i],lat[i],lng[i])
+                                                 title[i],year[i],abstract[i],lat[i],lng[i],survey[i])
         self.metaDict = metaDict
             
         ids = authorTbl.rx('id')[0]

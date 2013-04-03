@@ -17,7 +17,7 @@ def getAbstract(presenterId):
     authorStr = ["<a target=\"_blank\" href=\"mailto:" + author.email + "\">" +  author.lastName + ", " + author.firstName + "</a>" \
                   for author in abstract.authors]
     authorStr = "; ".join(authorStr)
-    return jsonify(title=abstract.title,authors=authorStr,abstract=abstract.abstract)
+    return jsonify(title=abstract.title,authors=authorStr,abstract=abstract.abstract,survey=abstract.survey)
 
 @app.route("/getauthors")
 def getAuthors():
@@ -50,6 +50,10 @@ def getNetwork():
 def getGlobalNetwork():
     return jsonify(network=_makeJSONGraphForAPCcluster())
 
+@app.route("/survey")
+def survey():
+    return render_template("survey.html")
+
 @app.route("/info")
 def info():
     return render_template("info.html")
@@ -64,7 +68,8 @@ def _makeJSONGraph(uniqueIds, edges):
                            {"name": "tooltip","type":"string"},\
                            {"name": "year","type":"string"},\
                            {"name": "lat","type": "string"},\
-                           {"name": "lng","type": "string"}]
+                           {"name": "lng","type": "string"},\
+                           {"name": "hasSurvey","type":"string"}]
     dataSchema['edges'] = [{"name": "weight","type":"float"}]
 
     data = {"nodes": _makeJSONNodes(uniqueIds),"edges": _makeJSONEdges(edges) }
@@ -86,6 +91,7 @@ def _makeJSONNodes(uniqueIds):
             "year": abs.year,\
             "lat": abs.lat,\
             "lng": abs.lng,\
+            "hasSurvey": "yes" if abs.hasSurvey() else "no",\
             "tooltip": abs.title + "\n" + abs.lastAuthor().institution } for abs in abstracts]
     return tmp
 
@@ -99,6 +105,7 @@ def _makeJSONNodesGlobalNetwork(uniqueIds, levels):
         
     tmp = [{"id": abs.uniqueId,\
             "year": abs.year,\
+            "hasSurvey": "yes" if abs.hasSurvey() else "no",\
             "tooltip": abs.firstAuthor().formattedName() + "\n" + abs.lastAuthor().formattedName() + "\n"\
             + abs.title + "\n" + abs.lastAuthor().institution,
             "level": findLevel(abs) } for abs in abstracts]
@@ -124,7 +131,8 @@ def _makeJSONGraphForAPCcluster():
                            {"name": "label","type":"string"},\
                            {"name": "tooltip","type":"string"},\
                            {"name": "year","type":"string"},\
-                           {"name": "level","type":"string"}]
+                           {"name": "level","type":"string"},\
+                           {"name": "hasSurvey","type":"string"}]
     dataSchema['edges'] = [{"name": "weight","type":"float"}]
     
     data = {"nodes": _makeJSONNodesGlobalNetwork(aacr.getAllIds(),levels),\

@@ -8,6 +8,7 @@ function showAbstractData(abstractId){
 				document.getElementById("lblAbstractText").innerHTML = resp.abstract
 				document.getElementById("lblAbstractId").innerHTML = abstractId
 				document.getElementById("lblAbstractAuthors").innerHTML = resp.authors
+				document.getElementById("lblSurveyText").innerHTML = resp.survey
 			});
 }
 
