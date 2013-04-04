@@ -29,11 +29,11 @@
 	}
 	
 	openInfo = function(){
-		window.open("/info",'','width=600,height=400')	
+		window.open("/info",'','width=600,height=400,resizable=1')	
 	}
 	
 	openSurvey = function(){
-		window.open("/survey",'','width=600,height=400')	
+		window.open("/survey",'','width=600,height=400,resizable=1')	
 	}
 	
 	
@@ -103,7 +103,7 @@ body {
 <body>
 	<div id="header"
 		style="background-color: #706B58; color: #fff; text-align: center;">
-		<h1 style="margin-bottom: 0;">AACR 2013: Networking the RAS
+		<h1 style="margin-bottom: 0;">AACR 2013: networking the RAS-RAF-EGFR
 			community</h1>
 	</div>
 	<div style="height: 65%;">
@@ -141,10 +141,11 @@ body {
 				</script>
 			</div>
 			<p/>
-			<!--  <span class="link" onClick='openInfo()'>Help/Info</span>-->
 			<span class="link" onClick='openSurvey()'>Survey</span>
-			
-
+			<p/>
+			<span class="link" onClick='openInfo()'>Help/Info</span>
+			<p/>
+			<a class="link" href="mailto:aacrfeedback@sagebase.org">Send feedback!!</a>
 		</div>
 
 

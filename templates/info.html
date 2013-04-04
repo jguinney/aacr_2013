@@ -2,7 +2,7 @@
 <html>
 
 <head>
-<title>AACR 2013: Connecting RAS research community</title>
+<title>AACR 2013: Connecting RAS-RAF-EGFR research community</title>
 
 
 <style>
@@ -148,8 +148,8 @@ body {
 				<li><a href="#data">Source Data</a></li>
 				<li><a href="#analysis">Data Analysis</a></li>
 				<li><a href="#ui">User Interface</a></li>
-				<li><a href="#interpretation">Interpretation</a></li>
-				<li><a href="refs">References</a></li>
+				<li><a href="#refs">References</a></li>
+				<li><a href="#credits">Credits</a></li>
 
 			</ul>
 		</div>
@@ -176,15 +176,13 @@ body {
 				<p>
 					To facilitate a more transparent and robust description of the RAS
 					research community, we propose the construction of a social
-					interactome for AACR RAS researchers. Our three primary aims are :
+					interactome for AACR RAS researchers. Our two primary aims are :
 					<block>
 					<ol>
 						<li>To promote discovery of fellow researchers engaged in
 							similar research, and thereby encourage collaboration</li>
 						<li>Provide a descriptive map of the types of research within
 							the RAS community</li>
-						<li>To enable the identification, transfer, and release of
-							new (or pending) data</li>
 					</ol>
 					</block>
 				</p>
@@ -196,10 +194,11 @@ body {
 			<div id="titletext" class="tcolor">Source Data</div>
 
 			<div id="main-text-full">
-				<p>The social interactome is based on all KRAS-related abstracts
-					accepted for the 2012 and 2013 AACR annual meetings. These data
-					were obtained XXX . In the spirit of data sharing, you can access
-					and download the source data in the following formats: XXX.</p>
+				<p>The social interactome is based on all RAS-related abstracts
+					accepted for the 2012 and 2013 AACR annual meetings. We identified
+					1388 abstracts that fit this criteria (793 2013 abstract and 595 2012 abstracts)
+					representing the work of 8813 scientists.
+				</p>
 			</div>
 
 			<div id="divider"></div>
@@ -210,25 +209,25 @@ body {
 
 			<div id="main-text-full">
 				<h4>Abstract text analysis</h4>
-				<p>XXX</p>
+				<p>We tokenized all words in the RAS related abstracts to create a document-term matrix.  We applied
+				standard text mining normalization to this data matrix, including removal of white space, punctuation, and stop words.
+				We also applied stemming algorithms to find word roots. Finally, we removed words that appeared infrequently (<2 abstracts).</p>
 				<br />
 				<h4>Base interactome</h4>
-				<p>XXX. The first-degree neighbor networks are extracted from
-					this base interactome.</p>
+				<p>We generated an abstract similarity matrix by first normalizing the word count matrix into a term frequency-inverse document frequency
+				(<a href="http://en.wikipedia.org/wiki/Tf-idf">tf-idf</a>) matrix, and finally computing a
+				document similarity matrix using the cosine distance metric.
+				</p>
 				<br />
 				<h4>Exemplar networks</h4>
-				<p>XXX</p>
+				<p>We used the Affinity Message Passing algorithm <a href="#refs">(ref)</a> to generate
+				the global network view.  This is essentially a hierarchical clustering algorithm that clusters
+				similar nodes, and then identifies an "exemplar" for that cluster.  These exemplars are then clusters, and so on.
+				The colors of this graphs represent the different levels of clustering, from blue - green - red - yellow, representing
+				the local to global clusters, respectively.
+				 </p>
 				<br />
-				<h4>Subnetwork clusters</h4>
-				<p>Starting with the base interactome network, we chose an edge
-					weight threshold of 0.24 based on visual inspection of the
-					distribution of edge weights, in order to produced a sparse network
-					of only the most significantly connected abstracts. This sparse
-					network was then imported into Cytoscape [ref] to perform Markov
-					CLustering Algorithm (MCL) analysis using the clusterMaker app
-					[ref]. MCL clustering identifies and ranks the most tightly
-					interconnected subnetworks. The top subnetworks are provided as an
-					optional view of the abstract interactome.</p>
+				
 			</div>
 
 			<div id="divider"></div>
@@ -250,7 +249,8 @@ body {
 					Analysis section above). Selecting a node in one network view will
 					carry over to other network views, if that same author/abstract
 					node is present. This allows the user to identify themselves (or a
-					colleague) in each of the network views.
+					colleague) in each of the network views. <b>If an authors of an abstract replied to our 
+					survey, then the node within the graph will have a red border.</b>
 				</p>
 				<br />
 				<h4>Network Panel</h4>
@@ -268,37 +268,13 @@ body {
 				<br />
 				<h4>Abstract Panel</h4>
 				<p>At the bottom of the page is a static text area that displays
-					the complete abstract details per selection in the network above.</p>
+					the complete abstract details per selection in the network above.
+					If the survey was answered by one or more of the coauthors, those results
+					will be displayed below the abstract.
+				</p>
 			</div>
 
-			<div id="divider"></div>
-
-			<a name="interpretation"></a>
-			<div id="titletext" class="tcolor">Interpretation</div>
-
-			<div id="main-text-full">
-				<h4>What does a connection mean?</h4>
-				<p>XXX</p>
-				<br />
-				<h4>First-neighbor networks</h4>
-				<p>XXX</p>
-				<br />
-				<h4>Exemplar networks</h4>
-				<p>XXX</p>
-				<br />
-				<h4>Subnetwork clusters</h4>
-				<p>These clusters represent the most interconnected groups
-					within the sparsified matrix (i.e., >0.24 edge weight threshold).
-					Given the interpretation of a connection above, members of a given
-					subnetwork cluster tend to use the same terms in their abstracts
-					more often than among all abstracts. This might be due to the
-					researchers working in the same sub-domain, or equally due to
-					arbitrary preferences in word usage. The statistical clusters alone
-					do not imply relevant groups, but the tools to assess the nature or
-					each subnetwork are available by clicking on subnetwork members and
-					assessing abstracts one-by-one.</p>
-			</div>
-
+			
 			<div id="divider"></div>
 
 			<a name="refs"></a>
@@ -315,11 +291,26 @@ body {
 						href="http://www.cgl.ucsf.edu/cytoscape/cluster/clusterMaker.html#mcl">http://www.cgl.ucsf.edu/cytoscape/cluster/clusterMaker.html#mcl</a></li>
 					<li>Cytoscape Web - <a
 						href="http://cytoscapeweb.cytoscape.org/">http://cytoscapeweb.cytoscape.org/</a></li>
+					<li><a href="http://www.sciencemag.org/content/315/5814/972.abstract">
+					Affinity propagation cluster</a> - Frey,B  and Dueck, D. Clustering by Passing Messages Between Data Points
+						<i>Science</i>, 2007, 315(5814): 972-976
+					 </li>
 				</ol>
 			</div>
 
 			<div id="divider"></div>
-
+			<a name="credits"></a>
+			<div id="titletext" class="tcolor">Credits</div>
+			
+			<ul>
+			<li><a href="mailto:justin.guinney@sagebase.org">Justin Guinney, PhD</a>, Sage Bionetworks</li>
+			<li>Charles Ferte, MD, PhD, Sage Bionetworks and Institute Gustave Roussy</a></li>
+			<li>Alex Pico, PhD, Gladstone Institute</li>
+			<li>Michael Beveridge, AACR</li>
+			<li>Stephen Friend, MD, PhD, Sage Bionetworks</a></li>
+			<li>Frank McCormick, PhD, UCSF</a></li>
+			</ul>
+			</p>
 		</div>
 	</div>
 
